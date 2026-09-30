@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMISOR
+  ESTUDIANTE
+}
+
+enum CertificateStatus {
+  ACTIVE
+  REVOKED
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  role          Role         @default(ESTUDIANTE)
+  createdAt     DateTime     @default(now())
+  issuedCertificates Certificate[] @relation("IssuedCertificates")
+}
+
+model Certificate {
+  id            String               @id @default(uuid())
+  uuid          String               @unique @db.Uuid
+  studentName   String
+  studentEmail  String?
+  courseName    String
+  grade         String
+  issuedBy      String
+  status        CertificateStatus    @default(ACTIVE)
+  pdfHash       String
+  integrityHash String
+  qrCodeUrl     String
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  revokedAt     DateTime?
+  createdById   String?
+  createdBy     User?                @relation("IssuedCertificates", fields: [createdById], references: [id])
+}
